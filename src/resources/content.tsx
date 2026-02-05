@@ -2,18 +2,18 @@ import { About, Blog, Gallery, Home, Newsletter, Person, Social, Work } from "@/
 import { Line, Row, Text } from "@once-ui-system/core";
 
 const person: Person = {
-  firstName: "Nguyen",
-  lastName: "Vinh",
-  name: `Nguyen An Vinh`,
-  role: "Infra Engineer",
+  firstName: "Vinh",
+  lastName: "Nguyen An",
+  name: "Nguyen An Vinh",
+  role: "Infrastructure & DevOps Intern",
   avatar: "/images/avatar.jpg",
   email: "navinh2k4@gmail.com",
-  location: "Asia/Ho_Chi_Minh", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
-  languages: ["English", "Vietnamese"], // optional: Leave the array empty if you don't want to display languages
+  location: "Asia/Ho_Chi_Minh",
+  languages: ["English", "Vietnamese"],
 };
 
 const newsletter: Newsletter = {
-  display: true,
+  display: false,
   title: <>Subscribe to {person.firstName}'s Newsletter</>,
   description: <>My weekly newsletter about creativity and engineering</>,
 };
@@ -25,7 +25,7 @@ const social: Social = [
   {
     name: "GitHub",
     icon: "github",
-    link: "https://github.com/nazinguyen",
+    link: "https://github.com/navinh2k4",
     essential: true,
   },
   {
@@ -35,15 +35,9 @@ const social: Social = [
     essential: true,
   },
   {
-    name: "Instagram",
-    icon: "instagram",
-    link: "https://www.instagram.com/once_ui/",
-    essential: false,
-  },
-  {
-    name: "Threads",
-    icon: "threads",
-    link: "https://www.threads.com/@once_ui",
+    name: "Facebook",
+    icon: "facebook",
+    link: "https://www.facebook.com/nh.vi.14661/?viewas=100000686899395",
     essential: true,
   },
   {
@@ -62,7 +56,7 @@ const home: Home = {
   description: `Portfolio website showcasing my work as a ${person.role}`,
   headline: <>Building bridges between design and code</>,
   featured: {
-    display: true,
+    display: false,
     title: (
       <Row gap="12" vertical="center">
         <strong className="ml-4">Once UI</strong>{" "}
@@ -76,8 +70,9 @@ const home: Home = {
   },
   subline: (
     <>
-    I'm Vinh, a infra engineer at <Text as="span" size="xl" weight="strong">Tel4vn</Text>, where I craft intuitive <br /> user experiences. After hours, I build my own projects.
-</>
+      I'm Vinh, an Infrastructure & DevOps Intern at <Text as="span" size="xl" weight="strong">Tel4vn</Text>. <br />
+      I optimize systems using Open Source solutions.
+    </>
   ),
 };
 
@@ -94,7 +89,7 @@ const about: About = {
     display: true,
   },
   calendar: {
-    display: true,
+    display: false,
     link: "https://cal.com",
   },
   intro: {
@@ -102,7 +97,9 @@ const about: About = {
     title: "Introduction",
     description: (
       <>
-        I'm a final-year Information Security student transitioning into the world of DevOps & Cloud Infrastructure. I love building automated systems, breaking them to find faults, and fixing them to be resilient.
+        Senior Information Security student with a solid technical foundation in Network Infrastructure and DevOps.
+        I am a problem-solver who values efficiency and cost-optimization through Open Source solutions.
+        Possesses hands-on experience in deploying, monitoring, and troubleshooting VoIP systems and Cloud infrastructure.
       </>
     ),
   },
@@ -111,41 +108,32 @@ const about: About = {
     title: "Work Experience",
     experiences: [
       {
-        company: "FLY",
-        timeframe: "2022 - Present",
-        role: "Senior Design Engineer",
+        company: "Tel4vn",
+        timeframe: "Present",
+        role: "Infrastructure & DevOps Intern",
         achievements: [
           <>
-            Redesigned the UI/UX for the FLY platform, resulting in a 20% increase in user
-            engagement and 30% faster load times.
+            Deployed and managed FusionPBX 4.4 on Debian 12, configured Nginx Web Server and PostgreSQL 12 Database.
           </>,
           <>
-            Spearheaded the integration of AI tools into design workflows, enabling designers to
-            iterate 50% faster.
+            Configured advanced Dialplans (Time conditions, International blocking); analyzed SIP signaling and troubleshot issues using Wireshark and sngrep.
+          </>,
+          <>
+            Implemented Zabbix for Cloud infrastructure monitoring and Homer 7 for log management. Utilized Jenkins and Ansible for initial deployment automation.
           </>,
         ],
-        images: [
-          // optional: leave the array empty if you don't want to display images
-          {
-            src: "/images/projects/project-01/cover-01.jpg",
-            alt: "Once UI Project",
-            width: 16,
-            height: 9,
-          },
-        ],
+        images: [],
       },
       {
-        company: "Creativ3",
-        timeframe: "2018 - 2022",
-        role: "Lead Designer",
+        company: "Side Project",
+        timeframe: "Recent",
+        role: "Family Invoice Management App",
         achievements: [
           <>
-            Developed a design system that unified the brand across multiple platforms, improving
-            design consistency by 40%.
+            Developed a web-based invoicing solution for a family business using Next.js and Supabase.
           </>,
           <>
-            Led a cross-functional team to launch a new product line, contributing to a 15% increase
-            in overall company revenue.
+            Optimized PDF generation and export workflows using html2canvas and jsPDF.
           </>,
         ],
         images: [],
@@ -157,12 +145,8 @@ const about: About = {
     title: "Studies",
     institutions: [
       {
-        name: "Academy Crypto Graphy Techniques",
-        description: <>Studied Security engineering.</>,
-      },
-      {
-        name: "Build the Future",
-        description: <>Studied online marketing and personal branding.</>,
+        name: "Academy of Cryptography Techniques (KMA)",
+        description: <>Information Security - 4th Year Student</>,
       },
     ],
   },
@@ -171,60 +155,48 @@ const about: About = {
     title: "Technical skills",
     skills: [
       {
-        title: "Figma",
+        title: "VoIP/Telecom",
         description: (
-          <>Able to prototype in Figma with Once UI with unnatural speed.</>
+          <>FreeSWITCH, FusionPBX, SIP Protocol Analysis (sngrep, Wireshark)</>
         ),
         tags: [
-          {
-            name: "Figma",
-            icon: "figma",
-          },
         ],
-        // optional: leave the array empty if you don't want to display images
-        images: [
-          {
-            src: "/images/projects/project-01/cover-02.jpg",
-            alt: "Project image",
-            width: 16,
-            height: 9,
-          },
-          {
-            src: "/images/projects/project-01/cover-03.jpg",
-            alt: "Project image",
-            width: 16,
-            height: 9,
-          },
-        ],
+        images: [],
       },
       {
-        title: "Next.js",
+        title: "System/OS",
         description: (
-          <>Building next gen apps with Next.js + Once UI + Supabase.</>
+          <>Debian 12, Linux Administration, Bash Scripting</>
         ),
         tags: [
-          {
-            name: "JavaScript",
-            icon: "javascript",
-          },
+        ],
+        images: [],
+      },
+      {
+        title: "DevOps/Tools",
+        description: (
+          <>Zabbix, Ansible, Jenkins, Docker, Git</>
+        ),
+        tags: [
+        ],
+        images: [],
+      },
+      {
+        title: "Web/Database",
+        description: (
+          <>Nginx, PHP 7.2, PostgreSQL, Next.js</>
+        ),
+        tags: [
           {
             name: "Next.js",
             icon: "nextjs",
           },
           {
-            name: "Supabase",
-            icon: "supabase",
-          },
+            name: "PostgreSQL",
+            icon: "postgresql", // Need to verify if this exists, otherwise generic
+          }
         ],
-        // optional: leave the array empty if you don't want to display images
-        images: [
-          {
-            src: "/images/projects/project-01/cover-04.jpg",
-            alt: "Project image",
-            width: 16,
-            height: 9,
-          },
-        ],
+        images: [],
       },
     ],
   },

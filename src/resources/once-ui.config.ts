@@ -190,14 +190,14 @@ const schema: SchemaConfig = {
   type: "Organization",
   name: "Once UI",
   description: home.description,
-  email: "lorant@once-ui.com",
+  email: "navinh2k4@gmail.com",
 };
 
 // social links
 const sameAs: SameAsConfig = {
   threads: "https://www.threads.com/@once_ui",
-  linkedin: "https://www.linkedin.com/in/vinh-nguyen-an-196aa7358/",
-  discord: "https://discord.com/invite/5EyAQ4eNdS",
+  linkedin: "https://www.linkedin.com/in/vinh-na-sysadmin/",
+  discord: "",
 };
 
 // social sharing configuration for blog posts
