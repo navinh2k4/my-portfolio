@@ -61,13 +61,14 @@ function isVideo(url: string) {
   return /\.(mp4|webm)$/i.test(url);
 }
 
-function createImage({ alt, src, ...props }: MediaProps & { src: string }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function createImage({ alt, src, ...rest }: MediaProps & { src: string }) {
   if (!src) {
     console.error("Media requires a valid 'src' property.");
     return null;
   }
 
-  // Video handling
+  // Video handling — only pass safe HTMLVideoElement attributes, NOT MediaProps
   if (isVideo(src)) {
     return (
       <video
@@ -76,8 +77,14 @@ function createImage({ alt, src, ...props }: MediaProps & { src: string }) {
         loop
         muted
         playsInline
-        style={{ width: "100%", height: "auto", objectFit: "contain" }}
-        {...props}
+        style={{
+          width: "100%",
+          height: "auto",
+          objectFit: "contain",
+          borderRadius: "var(--radius-m)",
+          marginTop: "8px",
+          marginBottom: "16px",
+        }}
       />
     );
   }
