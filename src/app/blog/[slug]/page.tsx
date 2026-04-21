@@ -6,7 +6,6 @@ import {
   Column,
   Heading,
   HeadingNav,
-  Icon,
   Row,
   Text,
   SmartLink,

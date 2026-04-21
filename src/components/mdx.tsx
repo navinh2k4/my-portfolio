@@ -1,4 +1,5 @@
 import { MDXRemote, MDXRemoteProps } from "next-mdx-remote/rsc";
+import Image from "next/image";
 import React, { ReactNode } from "react";
 import { slugify as transliterate } from "transliteration";
 
@@ -56,24 +57,53 @@ function CustomLink({ href, children, ...props }: CustomLinkProps) {
   );
 }
 
+function isVideo(url: string) {
+  return /\.(mp4|webm)$/i.test(url);
+}
+
 function createImage({ alt, src, ...props }: MediaProps & { src: string }) {
   if (!src) {
     console.error("Media requires a valid 'src' property.");
     return null;
   }
 
+  // Video handling
+  if (isVideo(src)) {
+    return (
+      <video
+        src={src}
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{ width: "100%", height: "auto", objectFit: "contain" }}
+        {...props}
+      />
+    );
+  }
+
+  // Image handling using Next.js Image (fill + aspect ratio trick)
   return (
-    <Media
-      marginTop="8"
-      marginBottom="16"
-      enlarge
-      radius="m"
-      border="neutral-alpha-medium"
-      sizes="(max-width: 960px) 100vw, 960px"
-      alt={alt}
-      src={src}
-      {...props}
-    />
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        paddingBottom: "56.25%", // 16:9 aspect ratio
+        overflow: "hidden",
+        borderRadius: "var(--radius-m)",
+        marginTop: "8px",
+        marginBottom: "16px",
+      }}
+    >
+      <Image
+        src={src}
+        alt={alt ?? ""}
+        loading="lazy"
+        fill
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 960px"
+        style={{ objectFit: "contain" }}
+      />
+    </div>
   );
 }
 

@@ -16,6 +16,7 @@ import { baseURL, about, person, social } from "@/resources";
 import TableOfContents from "@/components/about/TableOfContents";
 import styles from "@/components/about/about.module.scss";
 import React from "react";
+import { getAboutData } from "@/utils/getAboutData";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -28,6 +29,10 @@ export async function generateMetadata() {
 }
 
 export default function About() {
+  // Đọc dữ liệu từ TinaCMS JSON (override một phần so với resources/content.tsx)
+  const cmsData = getAboutData();
+  const bio = cmsData.bio || (about.intro.description as string);
+  const cmsTechSkills: string[] = cmsData.skills || [];
   const structure = [
     {
       title: about.intro.title,
@@ -198,7 +203,8 @@ export default function About() {
 
           {about.intro.display && (
             <Column textVariant="body-default-l" fillWidth gap="m" marginBottom="xl">
-              {about.intro.description}
+              {/* Bio từ TinaCMS (content/about.json) hoặc fallback về resources */}
+              {bio}
             </Column>
           )}
 

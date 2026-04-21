@@ -22,6 +22,13 @@ const nextConfig = {
     compiler: "modern",
     silenceDeprecations: ["legacy-js-api"],
   },
+  async rewrites() {
+    return [
+      // Redirect /admin → /admin/index.html (TinaCMS static admin UI)
+      { source: "/admin", destination: "/admin/index.html" },
+      { source: "/admin/", destination: "/admin/index.html" },
+    ];
+  },
 };
 
 export default withMDX(nextConfig);

@@ -1,0 +1,13 @@
+{
+  "title": "About",
+  "avatar": "/images/avatar.jpg",
+  "bio": "I am a passionate developer and designer who loves building beautiful, performant web applications. I bridge the gap between design and engineering to deliver seamless digital experiences.",
+  "skills": [
+    "Next.js",
+    "React",
+    "TypeScript",
+    "UI/UX Design",
+    "Node.js",
+    "TailwindCSS"
+  ]
+}

@@ -4,15 +4,12 @@ import {
   Meta,
   Schema,
   AvatarGroup,
-  Button,
   Column,
-  Flex,
   Heading,
   Media,
   Text,
   SmartLink,
   Row,
-  Avatar,
   Line,
 } from "@once-ui-system/core";
 import { baseURL, about, person, work } from "@/resources";
@@ -47,7 +44,10 @@ export async function generateMetadata({
     title: post.metadata.title,
     description: post.metadata.summary,
     baseURL: baseURL,
-    image: post.metadata.image || `/api/og/generate?title=${post.metadata.title}`,
+    image:
+      post.metadata.image ||
+      (post.metadata.images && post.metadata.images[0]) ||
+      `/api/og/generate?title=${encodeURIComponent(post.metadata.title)}`,
     path: `${work.path}/${post.slug}`,
   });
 }
@@ -118,9 +118,29 @@ export default async function Project({
           </Text>
         </Row>
       </Row>
-      {post.metadata.images.length > 0 && (
-        <Media priority aspectRatio="16 / 9" radius="m" alt="image" src={post.metadata.images[0]} />
-      )}
+      {post.metadata.images.length > 0 && (() => {
+        const heroSrc = post.metadata.images[0];
+        const isVideo = /\.(mp4|webm)$/i.test(heroSrc);
+        return isVideo ? (
+          <video
+            src={heroSrc}
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{ width: "100%", height: "auto", borderRadius: "var(--radius-m)" }}
+          />
+        ) : (
+          <Media
+            priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 960px"
+            aspectRatio="16 / 9"
+            radius="m"
+            alt={post.metadata.title}
+            src={heroSrc}
+          />
+        );
+      })()}
       <Column style={{ margin: "auto" }} as="article" maxWidth="xs">
         <CustomMDX source={post.content} />
       </Column>

@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  AvatarGroup,
-  Carousel,
-  Column,
-  Flex,
-  Heading,
-  SmartLink,
-  Text,
-} from "@once-ui-system/core";
+import Image from "next/image";
+import { AvatarGroup, Carousel, Column, Flex, Heading, SmartLink, Text } from "@once-ui-system/core";
 
 interface ProjectCardProps {
   href: string;
@@ -32,13 +25,35 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   return (
     <Column fillWidth gap="m">
-      <Carousel
-        sizes="(max-width: 960px) 100vw, 960px"
-        items={images.map((image) => ({
-          slide: image,
-          alt: title,
-        }))}
-      />
+      {/* Image carousel with video support */}
+      <Flex fillWidth overflow="hidden" style={{ position: "relative" }}>
+        {images.map((src, idx) => {
+          const isVideo = /\.(mp4|webm)$/i.test(src);
+          return isVideo ? (
+            <video
+              key={idx}
+              src={src}
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{ width: "100%", height: "auto", objectFit: "cover" }}
+            />
+          ) : (
+            <div key={idx} style={{ position: "relative", width: "100%", height: "0", paddingBottom: "56.25%" }}>
+              <Image
+                src={src}
+                alt={title}
+                fill
+                loading="lazy"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+          );
+        })}
+      </Flex>
+
       <Flex
         s={{ direction: "column" }}
         fillWidth
