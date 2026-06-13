@@ -22,7 +22,7 @@ interface RepoDetails {
   topics: string[];
 }
 
-export const DynamicBlogViewer = ({ id }: { id: string }) => {
+export default function DynamicBlogViewer({ id }: { id: string }) {
   const [mounted, setMounted] = useState(false);
   const [content, setContent] = useState<string | null>(null);
   const [repoDetails, setRepoDetails] = useState<RepoDetails | null>(null);

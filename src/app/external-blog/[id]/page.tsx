@@ -1,6 +1,13 @@
-import { DynamicBlogViewer } from "@/components/blog/DynamicBlogViewer";
+import DynamicBlogViewer from "@/components/blog/DynamicBlogViewer";
 
-export default async function ExternalBlogPage({ params }: { params: Promise<{ id: string }> }) {
-  const routeParams = await params;
-  return <DynamicBlogViewer id={routeParams.id} />;
+interface PageProps {
+  params: Promise<{ id: string }> | { id: string };
+}
+
+export default async function ExternalPostPage({ params }: PageProps) {
+  // Safely await params for Next.js async compatibility matrix
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
+
+  return <DynamicBlogViewer id={id} />;
 }

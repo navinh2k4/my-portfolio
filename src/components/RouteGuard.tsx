@@ -33,9 +33,11 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
           return routes[pathname as keyof typeof routes];
         }
 
-        const dynamicRoutes = ["/blog", "/work"] as const;
+        const dynamicRoutes = ["/blog", "/work", "/external-blog"] as const;
         for (const route of dynamicRoutes) {
-          if (pathname?.startsWith(route) && routes[route]) {
+          if (pathname?.startsWith(route)) {
+            // Note: Removed the explicit && routes[route] check for dynamic routes 
+            // because /external-blog is completely external and shouldn't require a strict routes mapping entry
             return true;
           }
         }
