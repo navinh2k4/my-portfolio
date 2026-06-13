@@ -83,10 +83,8 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
   }
 
   return (
-    <Row fillWidth>
-      <Row maxWidth={12} m={{ hide: true }} />
-      <Row fillWidth horizontal="center">
-        <Column as="section" maxWidth="m" horizontal="center" gap="l" paddingTop="24" style={{ margin: "0 auto", width: "100%", padding: "0 16px" }}>
+    <Column fillWidth horizontal="center" align="center">
+      <Column as="section" maxWidth="m" horizontal="center" gap="l" paddingTop="24" style={{ margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", width: "100%", maxWidth: "var(--responsive-width-m)", padding: "0 16px" }}>
           <Column maxWidth="s" gap="16" horizontal="center" align="center">
             <SmartLink href="/blog">
               <Text variant="label-strong-m">Blog</Text>
@@ -133,10 +131,25 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
               </Text>
             </Column>
           ) : (
-            <Column as="article" maxWidth="s" fillWidth style={{ margin: "0 auto", width: "100%", padding: "0 16px", overflowX: "hidden", paddingBottom: "80px" }}>
+            <Column as="article" maxWidth="m" fillWidth style={{ margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", width: "100%", maxWidth: "var(--responsive-width-m)", padding: "0 16px", overflowX: "hidden", paddingBottom: "80px" }}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
+                  img: ({ node, src, alt, ...props }: any) => {
+                    if (!src) return null;
+                    const isAbsolute = src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:");
+                    const cleanSrc = src.startsWith("/") ? src.substring(1) : src;
+                    const finalSrc = isAbsolute ? src : `https://raw.githubusercontent.com/navinh2k4/${id}/main/${cleanSrc}`;
+                    
+                    return (
+                      <img 
+                        src={finalSrc} 
+                        alt={alt || ""} 
+                        style={{ maxWidth: "100%", height: "auto", borderRadius: "var(--radius-m)", margin: "16px 0" }} 
+                        {...props} 
+                      />
+                    );
+                  },
                   h1: ({ node, ...props }: any) => <Heading as="h1" variant="heading-strong-xl" marginTop="48" marginBottom="24" {...props} />,
                   h2: ({ node, ...props }: any) => <Heading as="h2" variant="heading-strong-l" marginTop="40" marginBottom="16" {...props} />,
                   h3: ({ node, ...props }: any) => <Heading as="h3" variant="heading-strong-m" marginTop="32" marginBottom="16" {...props} />,
@@ -167,16 +180,17 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
                       <Text variant="body-default-m" {...props} />
                     </td>
                   ),
-                  code: ({ node, inline, className, children, ...props }: any) => {
+                  pre: ({ node, ...props }: any) => (
+                    <Column fillWidth style={{ overflowX: "auto" }} marginBottom="16" radius="m" border="neutral-medium" background="surface">
+                      <pre style={{ margin: 0, padding: "16px", overflowX: "auto", fontFamily: "monospace", fontSize: "14px" }} {...props} />
+                    </Column>
+                  ),
+                  code: ({ node, className, children, ...props }: any) => {
                     const match = /language-(\w+)/.exec(className || "");
-                    return !inline ? (
-                      <Column fillWidth style={{ overflowX: "auto" }} marginBottom="16" radius="m" border="neutral-medium" background="surface">
-                        <pre style={{ margin: 0, padding: "16px", overflowX: "auto", fontFamily: "monospace", fontSize: "14px" }}>
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        </pre>
-                      </Column>
+                    return match ? (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
                     ) : (
                       <code style={{ background: "var(--surface-overlay)", padding: "2px 6px", borderRadius: "4px", fontFamily: "monospace", fontSize: "14px" }} {...props}>
                         {children}
@@ -190,7 +204,6 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
             </Column>
           )}
         </Column>
-      </Row>
-    </Row>
+    </Column>
   );
 };

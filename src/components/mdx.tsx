@@ -61,11 +61,22 @@ function isVideo(url: string) {
   return /\.(mp4|webm)$/i.test(url);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function createImage({ alt, src, ...rest }: MediaProps & { src: string }) {
   if (!src) {
     console.error("Media requires a valid 'src' property.");
     return null;
+  }
+
+  // Intercept legacy repository asset folders injected via TinaCMS Markdown
+  if (src.startsWith("_assets/")) {
+    const targetRepo = "network-lab";
+    return (
+      <img
+        src={`https://raw.githubusercontent.com/navinh2k4/${targetRepo}/main/${src}`}
+        alt={alt || "Security Research Asset"}
+        style={{ maxWidth: "100%", height: "auto", borderRadius: "var(--radius-m)" }}
+      />
+    );
   }
 
   // Video handling — only pass safe HTMLVideoElement attributes, NOT MediaProps
