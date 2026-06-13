@@ -86,7 +86,7 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
     <Row fillWidth>
       <Row maxWidth={12} m={{ hide: true }} />
       <Row fillWidth horizontal="center">
-        <Column as="section" maxWidth="m" horizontal="center" gap="l" paddingTop="24">
+        <Column as="section" maxWidth="m" horizontal="center" gap="l" paddingTop="24" style={{ margin: "0 auto", width: "100%", padding: "0 16px" }}>
           <Column maxWidth="s" gap="16" horizontal="center" align="center">
             <SmartLink href="/blog">
               <Text variant="label-strong-m">Blog</Text>
@@ -133,7 +133,7 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
               </Text>
             </Column>
           ) : (
-            <Column as="article" maxWidth="s" fillWidth style={{ overflowX: "hidden", paddingBottom: "80px" }}>
+            <Column as="article" maxWidth="s" fillWidth style={{ margin: "0 auto", width: "100%", padding: "0 16px", overflowX: "hidden", paddingBottom: "80px" }}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
