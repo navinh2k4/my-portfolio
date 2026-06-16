@@ -67,6 +67,18 @@ function createImage({ alt, src, ...rest }: MediaProps & { src: string }) {
     return null;
   }
 
+  let finalSrc = src;
+  if (src.includes("github.com/user-attachments/assets/")) {
+    finalSrc = src.includes("?raw=true") ? src : `${src}?raw=true`;
+    return (
+      <img
+        src={finalSrc}
+        alt={alt || "GitHub Asset"}
+        style={{ maxWidth: "100%", height: "auto", display: "block", margin: "16px auto", borderRadius: "var(--radius-m)" }}
+      />
+    );
+  }
+
   // Intercept legacy repository asset folders injected via TinaCMS Markdown
   if (src.startsWith("_assets/")) {
     const targetRepo = "network-lab";
@@ -74,7 +86,7 @@ function createImage({ alt, src, ...rest }: MediaProps & { src: string }) {
       <img
         src={`https://raw.githubusercontent.com/navinh2k4/${targetRepo}/main/${src}`}
         alt={alt || "Security Research Asset"}
-        style={{ maxWidth: "100%", height: "auto", borderRadius: "var(--radius-m)" }}
+        style={{ maxWidth: "100%", height: "auto", display: "block", margin: "16px auto", borderRadius: "var(--radius-m)" }}
       />
     );
   }

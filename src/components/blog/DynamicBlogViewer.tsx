@@ -22,57 +22,130 @@ interface RepoDetails {
   topics: string[];
 }
 
+interface FileNode {
+  name: string;
+  path: string;
+  type: "dir" | "file";
+  download_url: string | null;
+}
+
 export default function DynamicBlogViewer({ id }: { id: string }) {
   const [mounted, setMounted] = useState(false);
   const [content, setContent] = useState<string | null>(null);
+  const [contentDir, setContentDir] = useState<string>("");
   const [repoDetails, setRepoDetails] = useState<RepoDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
+  
+  // New States for File Explorer
+  const [currentSubPath, setCurrentSubPath] = useState<string>("");
+  const [fileTree, setFileTree] = useState<FileNode[]>([]);
+  const [viewingCode, setViewingCode] = useState<string | null>(null);
 
+  // 1. Initial Mount: Fetch Repo Details
   useEffect(() => {
     setMounted(true);
-    const fetchData = async () => {
+    const fetchRepo = async () => {
       try {
-        setLoading(true);
-
-        // 1. Fetch repo metadata
         const repoRes = await fetch(`https://api.github.com/repos/navinh2k4/${id}`);
         if (!repoRes.ok) {
-          if (repoRes.status === 404) {
-            notFound();
-            return;
-          }
+          if (repoRes.status === 404) notFound();
           throw new Error("Failed to fetch repo details");
         }
-        const repoData = await repoRes.json();
-        setRepoDetails(repoData);
+        setRepoDetails(await repoRes.json());
+      } catch (err) {
+        console.error(err);
+        setError(true);
+      }
+    };
+    if (!repoDetails) fetchRepo();
+  }, [id, repoDetails]);
 
-        // 2. Fetch repo README.md
-        const contentRes = await fetch(
-          `https://api.github.com/repos/navinh2k4/${id}/contents/README.md`,
-          {
-            headers: {
-              Accept: "application/vnd.github.v3.raw",
-            },
-          }
-        );
+  // 2. Fetch Directory Contents on SubPath Change
+  useEffect(() => {
+    const fetchContents = async () => {
+      setLoading(true);
+      try {
+        const fetchPath = currentSubPath ? `contents/${currentSubPath}` : "contents";
+        const contentRes = await fetch(`https://api.github.com/repos/navinh2k4/${id}/${fetchPath}`);
 
         if (!contentRes.ok) {
-          throw new Error("Failed to fetch markdown content");
+          throw new Error("Failed to fetch directory contents");
         }
 
-        const text = await contentRes.text();
-        setContent(text);
+        const data = await contentRes.json();
+
+        if (Array.isArray(data)) {
+          // Sort: Directories first, then files
+          const sortedTree = data.sort((a: FileNode, b: FileNode) => {
+            if (a.type === b.type) return a.name.localeCompare(b.name);
+            return a.type === "dir" ? -1 : 1;
+          });
+          setFileTree(sortedTree);
+          setContentDir(currentSubPath ? currentSubPath + "/" : "");
+
+          // Check for README.md in the current directory
+          const readmeNode = data.find((node: FileNode) => node.name.toLowerCase() === "readme.md");
+          if (readmeNode && readmeNode.download_url) {
+            const readmeRes = await fetch(readmeNode.download_url);
+            if (readmeRes.ok) {
+              setContent(await readmeRes.text());
+            } else {
+              setContent(null);
+            }
+          } else {
+            setContent(null);
+          }
+          setViewingCode(null);
+        }
       } catch (err) {
-        console.error("Error fetching dynamic blog:", err);
+        console.error(err);
         setError(true);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [id]);
+    if (mounted) fetchContents();
+  }, [id, currentSubPath, mounted]);
+
+  const handleItemClick = async (node: FileNode) => {
+    if (node.type === "dir") {
+      setCurrentSubPath(node.path);
+    } else if (node.type === "file" && node.download_url) {
+      setLoading(true);
+      try {
+        const fileRes = await fetch(node.download_url);
+        if (!fileRes.ok) throw new Error("Failed to fetch file");
+        const text = await fileRes.text();
+
+        const isMarkdown = node.name.toLowerCase().endsWith(".md");
+        if (isMarkdown) {
+          setContent(text);
+          setViewingCode(null);
+          const lastSlash = node.path.lastIndexOf('/');
+          setContentDir(lastSlash !== -1 ? node.path.substring(0, lastSlash) + "/" : "");
+        } else {
+          setContent(null);
+          setViewingCode(text);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleNavigateUp = () => {
+    if (!currentSubPath) return;
+    const lastSlash = currentSubPath.lastIndexOf('/');
+    if (lastSlash === -1) {
+      setCurrentSubPath("");
+    } else {
+      setCurrentSubPath(currentSubPath.substring(0, lastSlash));
+    }
+  };
 
   if (!mounted || (error && !repoDetails)) {
     return (
@@ -90,7 +163,7 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
               <Text variant="label-strong-m">Blog</Text>
             </SmartLink>
 
-            {loading ? (
+            {loading && !repoDetails ? (
               <Column fillWidth gap="12" align="center" horizontal="center">
                 <Skeleton shape="line" />
                 <Skeleton shape="line" />
@@ -115,7 +188,35 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
 
           <Line maxWidth="40" marginTop="24" marginBottom="24" />
 
-          {loading ? (
+          {/* File Explorer UI */}
+          <Column fillWidth maxWidth="m" gap="8" marginBottom="32" style={{ border: "1px solid var(--neutral-border-weak)", borderRadius: "var(--radius-m)", padding: "16px", background: "var(--surface-overlay)", width: "100%" }}>
+            <Text variant="label-strong-m" marginBottom="16">File Explorer {currentSubPath ? `(/${currentSubPath})` : ""}</Text>
+            {currentSubPath && (
+              <Row 
+                gap="12" 
+                vertical="center" 
+                style={{ cursor: "pointer", padding: "8px", borderRadius: "var(--radius-s)", borderBottom: "1px solid var(--neutral-border-weak)" }} 
+                onClick={handleNavigateUp}
+              >
+                <Text variant="body-default-m">.. (Quay lại thư mục cha)</Text>
+              </Row>
+            )}
+            {fileTree.map((node) => (
+              <Row 
+                key={node.path} 
+                gap="12" 
+                vertical="center" 
+                style={{ cursor: "pointer", padding: "8px", borderRadius: "var(--radius-s)", borderBottom: "1px solid var(--neutral-border-weak)" }} 
+                onClick={() => handleItemClick(node)}
+              >
+                <Text variant="body-default-m">{node.type === "dir" ? "📁" : "📄"}</Text>
+                <Text variant="body-default-m" onBackground={node.type === "dir" ? "brand-strong" : "neutral-strong"}>{node.name}</Text>
+              </Row>
+            ))}
+            {loading && <Text variant="body-default-s" onBackground="neutral-weak" marginTop="8">Loading folder contents...</Text>}
+          </Column>
+
+          {loading && !fileTree.length ? (
             <Column fillWidth gap="16" maxWidth="s">
               <Skeleton shape="line" />
               <Skeleton shape="line" />
@@ -127,83 +228,99 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
           ) : error ? (
             <Column fillWidth gap="16" maxWidth="s" horizontal="center">
               <Text variant="body-strong-m" onBackground="danger-weak">
-                Failed to load README.md from GitHub.
+                Failed to load file contents from GitHub.
               </Text>
             </Column>
           ) : (
-            <Column as="article" maxWidth="m" fillWidth style={{ margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", width: "100%", maxWidth: "var(--responsive-width-m)", padding: "0 16px", overflowX: "hidden", paddingBottom: "80px" }}>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  img: ({ node, src, alt, ...props }: any) => {
-                    if (!src) return null;
-                    const isAbsolute = src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:");
-                    const cleanSrc = src.startsWith("/") ? src.substring(1) : src;
-                    const finalSrc = isAbsolute ? src : `https://raw.githubusercontent.com/navinh2k4/${id}/main/${cleanSrc}`;
-                    
-                    return (
-                      <img 
-                        src={finalSrc} 
-                        alt={alt || ""} 
-                        style={{ maxWidth: "100%", height: "auto", borderRadius: "var(--radius-m)", margin: "16px 0" }} 
-                        {...props} 
-                      />
-                    );
-                  },
-                  h1: ({ node, ...props }: any) => <Heading as="h1" variant="heading-strong-xl" marginTop="48" marginBottom="24" {...props} />,
-                  h2: ({ node, ...props }: any) => <Heading as="h2" variant="heading-strong-l" marginTop="40" marginBottom="16" {...props} />,
-                  h3: ({ node, ...props }: any) => <Heading as="h3" variant="heading-strong-m" marginTop="32" marginBottom="16" {...props} />,
-                  h4: ({ node, ...props }: any) => <Heading as="h4" variant="heading-strong-s" marginTop="24" marginBottom="16" {...props} />,
-                  p: ({ node, ...props }: any) => <Text as="p" variant="body-default-m" marginBottom="16" {...props} />,
-                  a: ({ node, ...props }: any) => <SmartLink href={props.href || "#"} {...props} />,
-                  ul: ({ node, ...props }: any) => <Column as="ul" gap="8" paddingLeft="24" marginBottom="16" style={{ listStyleType: "disc" }} {...props} />,
-                  ol: ({ node, ...props }: any) => <Column as="ol" gap="8" paddingLeft="24" marginBottom="16" style={{ listStyleType: "decimal" }} {...props} />,
-                  li: ({ node, ...props }: any) => <Text as="li" variant="body-default-m" {...props} />,
-                  blockquote: ({ node, ...props }: any) => (
-                    <Column as="blockquote" paddingLeft="16" marginBottom="16" style={{ borderLeft: "4px solid var(--neutral-border-medium)", fontStyle: "italic" }}>
-                      <Text variant="body-default-m" onBackground="neutral-weak" {...props} />
-                    </Column>
-                  ),
-                  hr: ({ node, ...props }: any) => <Line marginTop="24" marginBottom="24" {...props} />,
-                  table: ({ node, ...props }: any) => (
-                    <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", width: "100%", marginBottom: "16px" }}>
-                      <table style={{ minWidth: "100%", borderCollapse: "collapse" }} {...props} />
-                    </div>
-                  ),
-                  th: ({ node, ...props }: any) => (
-                    <th style={{ borderBottom: "2px solid var(--neutral-border-medium)", padding: "12px 8px", textAlign: "left" }}>
-                      <Text variant="label-strong-m" {...props} />
-                    </th>
-                  ),
-                  td: ({ node, ...props }: any) => (
-                    <td style={{ borderBottom: "1px solid var(--neutral-border-weak)", padding: "12px 8px" }}>
-                      <Text variant="body-default-m" {...props} />
-                    </td>
-                  ),
-                  pre: ({ node, ...props }: any) => (
-                    <Column fillWidth style={{ overflowX: "auto" }} marginBottom="16" radius="m" border="neutral-medium" background="surface">
-                      <pre style={{ margin: 0, padding: "16px", overflowX: "auto", fontFamily: "monospace", fontSize: "14px" }} {...props} />
-                    </Column>
-                  ),
-                  code: ({ node, className, children, ...props }: any) => {
-                    const match = /language-(\w+)/.exec(className || "");
-                    return match ? (
-                      <code className={className} {...props}>
-                        {children}
-                      </code>
-                    ) : (
-                      <code style={{ background: "var(--surface-overlay)", padding: "2px 6px", borderRadius: "4px", fontFamily: "monospace", fontSize: "14px" }} {...props}>
-                        {children}
-                      </code>
-                    );
-                  },
-                }}
-              >
-                {content || ""}
-              </ReactMarkdown>
+            <Column as="article" maxWidth="m" fillWidth style={{ margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "left", width: "100%", maxWidth: "var(--responsive-width-m)", padding: "0 16px", overflowX: "hidden", paddingBottom: "80px" }}>
+              {viewingCode !== null ? (
+                <Column fillWidth style={{ overflowX: "auto" }} marginBottom="16" radius="m" border="neutral-medium" background="surface">
+                  <pre style={{ margin: 0, padding: "16px", overflowX: "auto", fontFamily: "monospace", fontSize: "14px", textAlign: "left", display: "block", width: "100%", whiteSpace: "pre" }}>
+                    <code>{viewingCode}</code>
+                  </pre>
+                </Column>
+              ) : content !== null ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    img: ({ node, src, alt, ...props }: any) => {
+                      if (!src) return null;
+                      
+                      let finalSrc = src;
+                      if (src.includes("github.com/user-attachments/assets/")) {
+                        finalSrc = src.includes("?raw=true") ? src : `${src}?raw=true`;
+                      } else {
+                        const isAbsolute = src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:");
+                        const cleanSrc = src.startsWith("/") ? src.substring(1) : src;
+                        finalSrc = isAbsolute ? src : `https://raw.githubusercontent.com/navinh2k4/${id}/main/${contentDir}${cleanSrc}`;
+                      }
+                      
+                      return (
+                        <img 
+                          src={finalSrc} 
+                          alt={alt || ""} 
+                          style={{ maxWidth: "100%", height: "auto", display: "block", margin: "16px auto", borderRadius: "var(--radius-m)" }} 
+                          {...props} 
+                        />
+                      );
+                    },
+                    h1: ({ node, ...props }: any) => <Heading as="h1" variant="heading-strong-xl" marginTop="48" marginBottom="24" {...props} />,
+                    h2: ({ node, ...props }: any) => <Heading as="h2" variant="heading-strong-l" marginTop="40" marginBottom="16" {...props} />,
+                    h3: ({ node, ...props }: any) => <Heading as="h3" variant="heading-strong-m" marginTop="32" marginBottom="16" {...props} />,
+                    h4: ({ node, ...props }: any) => <Heading as="h4" variant="heading-strong-s" marginTop="24" marginBottom="16" {...props} />,
+                    p: ({ node, ...props }: any) => <Text as="p" variant="body-default-m" marginBottom="16" {...props} />,
+                    a: ({ node, ...props }: any) => <SmartLink href={props.href || "#"} {...props} />,
+                    ul: ({ node, ...props }: any) => <Column as="ul" gap="8" paddingLeft="24" marginBottom="16" style={{ listStyleType: "disc" }} {...props} />,
+                    ol: ({ node, ...props }: any) => <Column as="ol" gap="8" paddingLeft="24" marginBottom="16" style={{ listStyleType: "decimal" }} {...props} />,
+                    li: ({ node, ...props }: any) => <Text as="li" variant="body-default-m" {...props} />,
+                    blockquote: ({ node, ...props }: any) => (
+                      <Column as="blockquote" paddingLeft="16" marginBottom="16" style={{ borderLeft: "4px solid var(--neutral-border-medium)", fontStyle: "italic" }}>
+                        <Text variant="body-default-m" onBackground="neutral-weak" {...props} />
+                      </Column>
+                    ),
+                    hr: ({ node, ...props }: any) => <Line marginTop="24" marginBottom="24" {...props} />,
+                    table: ({ node, ...props }: any) => (
+                      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", width: "100%", marginBottom: "16px" }}>
+                        <table style={{ minWidth: "100%", borderCollapse: "collapse" }} {...props} />
+                      </div>
+                    ),
+                    th: ({ node, ...props }: any) => (
+                      <th style={{ borderBottom: "2px solid var(--neutral-border-medium)", padding: "12px 8px", textAlign: "left" }}>
+                        <Text variant="label-strong-m" {...props} />
+                      </th>
+                    ),
+                    td: ({ node, ...props }: any) => (
+                      <td style={{ borderBottom: "1px solid var(--neutral-border-weak)", padding: "12px 8px" }}>
+                        <Text variant="body-default-m" {...props} />
+                      </td>
+                    ),
+                    pre: ({ node, ...props }: any) => (
+                      <Column fillWidth style={{ overflowX: "auto" }} marginBottom="16" radius="m" border="neutral-medium" background="surface">
+                        <pre style={{ margin: 0, padding: "16px", overflowX: "auto", fontFamily: "monospace", fontSize: "14px", textAlign: "left", display: "block", width: "100%", whiteSpace: "pre" }} {...props} />
+                      </Column>
+                    ),
+                    code: ({ node, className, children, ...props }: any) => {
+                      const match = /language-(\w+)/.exec(className || "");
+                      return match ? (
+                        <code className={className} style={{ textAlign: "left" }} {...props}>
+                          {children}
+                        </code>
+                      ) : (
+                        <code style={{ background: "var(--surface-overlay)", padding: "2px 6px", borderRadius: "4px", fontFamily: "monospace", fontSize: "14px" }} {...props}>
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                >
+                  {content || ""}
+                </ReactMarkdown>
+              ) : (
+                <Text variant="body-default-m" onBackground="neutral-weak">No content available to display.</Text>
+              )}
             </Column>
           )}
         </Column>
     </Column>
   );
-};
+}
