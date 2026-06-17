@@ -155,6 +155,14 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
     );
   }
 
+  // Regex filter to catch LaTeX style arrow artifacts and enforce clean Unicode arrows
+  const sanitizedContent = content
+    ? content
+        .replace(/\$\\rightarrow\$/g, "→")
+        .replace(/\\rightarrow/g, "→")
+        .replace(/->/g, "→")
+    : "";
+
   return (
     <Column fillWidth horizontal="center" align="center">
       <Column as="section" maxWidth="m" horizontal="center" gap="l" paddingTop="24" style={{ margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", width: "100%", maxWidth: "var(--responsive-width-m)", padding: "0 16px" }}>
@@ -313,7 +321,7 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
                     },
                   }}
                 >
-                  {content || ""}
+                  {sanitizedContent}
                 </ReactMarkdown>
               ) : (
                 <Text variant="body-default-m" onBackground="neutral-weak">No content available to display.</Text>
