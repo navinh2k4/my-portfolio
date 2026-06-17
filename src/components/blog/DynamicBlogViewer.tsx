@@ -158,9 +158,17 @@ export default function DynamicBlogViewer({ id }: { id: string }) {
   // Regex filter to catch LaTeX style arrow artifacts and enforce clean Unicode arrows
   const sanitizedContent = content
     ? content
+        // 1. Convert back raw latex math symbols into clean text
+        .replace(/\$4\\text\{ KB\}\$/g, "4 KB")
+        .replace(/\$4\\text\{KB\}\$/g, "4 KB")
+        
+        // 2. Fix the broken C++ pointer operators inside source code blocks
+        // Intercept the mutated Unicode arrow and restore it to standard '->' code representation
+        .replace(/([a-zA-Z0-9_])→([a-zA-Z0-9_])/g, "$1->$2")
+        
+        // 3. Keep the baseline Markdown alignment arrow filters intact
         .replace(/\$\\rightarrow\$/g, "→")
         .replace(/\\rightarrow/g, "→")
-        .replace(/->/g, "→")
     : "";
 
   return (
